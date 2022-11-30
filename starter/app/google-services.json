@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "30423509150",
+    "project_id": "todo-with-maps",
+    "storage_bucket": "todo-with-maps.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:30423509150:android:091b1a7bfc4207477df38f",
+        "android_client_info": {
+          "package_name": "com.udacity.project4"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "30423509150-5k67fst0v885fgoutdi6uqnvo7leqvf8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.udacity.project4",
+            "certificate_hash": "8f60d111ca252f84916c3f5329d28396f90edc95"
+          }
+        },
+        {
+          "client_id": "30423509150-f6mhvibt7u4vj671a605s46bv3n1gpc3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAWUl-qDetCuF3irFojXbUGdoxXrNlwNIc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "30423509150-f6mhvibt7u4vj671a605s46bv3n1gpc3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
