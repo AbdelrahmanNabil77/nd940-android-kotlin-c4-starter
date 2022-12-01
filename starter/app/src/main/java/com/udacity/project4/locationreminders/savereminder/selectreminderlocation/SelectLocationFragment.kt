@@ -3,8 +3,11 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Resources
+import android.location.Location
+import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
 import android.view.*
@@ -30,9 +33,11 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private lateinit var map: GoogleMap
     private val runningQOrLater =
         android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q
-    private val REQUEST_FINE_AND_BACKGROUND_LOCATION_PERMISSION = 1
+
     private val REQUEST_FINE_LOCATION_PERMISSION = 2
     private val REQUEST_BACKGROUND_LOCATION_PERMISSION = 3
+
+    private lateinit var mFusedLocationClient: FusedLocationProviderClient
 
     //Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
@@ -54,6 +59,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         val mapFragment = childFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+
 //        TODO: zoom to the user location after taking his permission
 //        TODO: add style to the map
 //        TODO: put a marker to location that the user selected
@@ -110,13 +117,14 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             31.498624
         )
 
-        map.addMarker(
-            MarkerOptions().position(home).title("منزل خاطر").snippet(snippet)
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
-        )
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(home, zoom))
+//        map.addMarker(
+//            MarkerOptions().position(home).title("منزل خاطر").snippet(snippet)
+//                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+//        )
+//        map.moveCamera(CameraUpdateFactory.newLatLngZoom(home, zoom))
         setMapStyle(map)
         enableMyLocation()
+        getCurrentLocation()
 
     }
 
@@ -143,13 +151,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         return ContextCompat.checkSelfPermission(
             requireContext(),
             Manifest.permission.ACCESS_FINE_LOCATION
-        ) === PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun isBackgroundLocationPermissionGranted(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            requireContext(),
-            Manifest.permission.ACCESS_BACKGROUND_LOCATION
         ) === PackageManager.PERMISSION_GRANTED
     }
 
@@ -189,15 +190,46 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     requestBackgroundLocationPermission()
                 } else {
                     enableMyLocation()
+                    getCurrentLocation()
                 }
             }
         }
         if (requestCode == REQUEST_BACKGROUND_LOCATION_PERMISSION) {
             if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                 enableMyLocation()
+                getCurrentLocation()
             } else {
-                Toast.makeText(requireContext(),getString(R.string.background_permission_denied_explanation),Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.background_permission_denied_explanation),
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
+
+    private fun isLocationEnabled(): Boolean {
+        val locationManager: LocationManager =
+            requireActivity().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
+            LocationManager.NETWORK_PROVIDER
+        )
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun getCurrentLocation() {
+        if (isFineLocationPermissionGranted() && isLocationEnabled()) {
+            mFusedLocationClient.lastLocation.addOnCompleteListener(requireActivity()) { task ->
+                val location: Location? = task.result
+                if (location != null) {
+                    val home = LatLng(location.latitude, location.longitude)
+                    val zoom = 15f
+                    map.moveCamera(CameraUpdateFactory.newLatLngZoom(home, zoom))
+                }
+            }
+        } else {
+            requestFineLocationPermission()
+        }
+    }
+
 }
