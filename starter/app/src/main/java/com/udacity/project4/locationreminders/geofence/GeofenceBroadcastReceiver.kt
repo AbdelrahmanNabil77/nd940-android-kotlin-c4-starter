@@ -1,9 +1,17 @@
 package com.udacity.project4.locationreminders.geofence
 
+import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import android.widget.Toast
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.GeofencingEvent
+import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
+import com.udacity.project4.utils.AppConstants.ACTION_GEOFENCE_EVENT
+import com.udacity.project4.utils.sendNotification
 
 /**
  * Triggered by the Geofence.  Since we can have many Geofences at once, we pull the request
@@ -16,11 +24,34 @@ import android.util.Log
  */
 
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
-    val TAG = "BroadcastReceiver"
+    val TAG = "GeoFenceReceiver"
     override fun onReceive(context: Context, intent: Intent) {
-        Log.d(TAG, "ENTERED GEOOOOOO FENCEEEEEEEE")
-        GeofenceTransitionsJobIntentService.enqueueWork(context,intent)
-//TODO: implement the onReceive method to receive the geofencing events at the background
+        if (intent.action == ACTION_GEOFENCE_EVENT) {
+            val geofencingEvent = GeofencingEvent.fromIntent(intent)
+
+            if (geofencingEvent.hasError()) {
+                Toast.makeText(context,"Geofence error: ${geofencingEvent.errorCode}",
+                Toast.LENGTH_LONG).show()
+                return
+            }
+
+            if (geofencingEvent.geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
+                Log.d(TAG,"ON RECEIVE lat: ${geofencingEvent.triggeringLocation.latitude} " +
+                        "lon: ${geofencingEvent.triggeringLocation.longitude}")
+                val fenceId = when {
+                    geofencingEvent.triggeringGeofences.isNotEmpty() ->
+                        geofencingEvent.triggeringGeofences[0].requestId
+                    else -> {
+                        Log.e(TAG, "No Geofence Trigger Found! Abort mission!")
+                        return
+                    }
+                }
+
+                sendNotification(context,
+                    ReminderDataItem("title","Desc","${fenceId}",
+                    geofencingEvent.triggeringLocation.latitude,geofencingEvent.triggeringLocation.longitude))
+            }
+        }
 
     }
 }
