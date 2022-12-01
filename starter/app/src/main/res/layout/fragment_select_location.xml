@@ -16,9 +16,19 @@
         <!--TODO: Add the map fragment for the user to select the location-->
 <fragment
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="0dp"
     android:id="@+id/map"
-    android:name="com.google.android.gms.maps.SupportMapFragment"/>
+    android:name="com.google.android.gms.maps.SupportMapFragment"
+    app:layout_constraintTop_toTopOf="parent"
+    android:layout_marginBottom="10dp"
+    app:layout_constraintBottom_toTopOf="@id/confirm_poi_button"/>
+        <TextView
+            android:id="@+id/confirm_poi_button"
+            android:text="Confirm"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            style="@style/main_btn" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -20,18 +20,11 @@
 
     <TextView
         android:id="@+id/auth_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/colorAccent"
-        android:gravity="center"
         android:text="Login"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        android:layout_margin="15dp"
-        android:padding="15dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        style="@style/main_btn" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

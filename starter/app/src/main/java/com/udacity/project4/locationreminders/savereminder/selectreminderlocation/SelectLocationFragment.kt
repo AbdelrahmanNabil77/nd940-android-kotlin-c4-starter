@@ -39,6 +39,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
 
+    private var selectedPosition = LatLng(0.0, 0.0)
+
     //Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var binding: FragmentSelectLocationBinding
@@ -55,19 +57,12 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         setHasOptionsMenu(true)
         setDisplayHomeAsUpEnabled(true)
 
-//        TODO: add the map setup implementation
         val mapFragment = childFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
-//        TODO: zoom to the user location after taking his permission
-//        TODO: add style to the map
-//        TODO: put a marker to location that the user selected
-
-
-//        TODO: call this function after the user confirms on the selected location
-        onLocationSelected()
+        binding.confirmPoiButton.setOnClickListener { onLocationSelected() }
 
         return binding.root
     }
@@ -76,6 +71,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         //        TODO: When the user confirms on the selected location,
         //         send back the selected location details to the view model
         //         and navigate back to the previous fragment to save the reminder and add the geofence
+        _viewModel.latitude.postValue(selectedPosition.latitude)
+        _viewModel.longitude.postValue(selectedPosition.longitude)
+        requireActivity().onBackPressed()
     }
 
 
@@ -108,23 +106,11 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
         map = googleMap
 
-        val home = LatLng(30.588003, 31.498624)
-        val zoom = 18f
-        val snippet = String.format(
-            Locale.getDefault(),
-            "هنا يرقد خطورة",
-            30.588003,
-            31.498624
-        )
-
-//        map.addMarker(
-//            MarkerOptions().position(home).title("منزل خاطر").snippet(snippet)
-//                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
-//        )
-//        map.moveCamera(CameraUpdateFactory.newLatLngZoom(home, zoom))
         setMapStyle(map)
         enableMyLocation()
         getCurrentLocation()
+        setPoiClick(map)
+        setMapLongClick(map)
 
     }
 
@@ -222,9 +208,13 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             mFusedLocationClient.lastLocation.addOnCompleteListener(requireActivity()) { task ->
                 val location: Location? = task.result
                 if (location != null) {
-                    val home = LatLng(location.latitude, location.longitude)
+                    selectedPosition = LatLng(location.latitude, location.longitude)
                     val zoom = 15f
-                    map.moveCamera(CameraUpdateFactory.newLatLngZoom(home, zoom))
+                    map.moveCamera(CameraUpdateFactory.newLatLngZoom(selectedPosition, zoom))
+                    map.addMarker(
+                        MarkerOptions()
+                            .position(selectedPosition)
+                    )
                 }
             }
         } else {
@@ -232,4 +222,37 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
     }
 
+    private fun setPoiClick(map: GoogleMap) {
+        map.setOnPoiClickListener { poi ->
+            map.clear()
+            selectedPosition = poi.latLng
+            val poiMarker = map.addMarker(
+                MarkerOptions()
+                    .position(poi.latLng)
+                    .title(poi.name)
+            )
+            poiMarker?.showInfoWindow()
+        }
+    }
+
+    private fun setMapLongClick(map: GoogleMap) {
+        map.setOnMapLongClickListener { latLng ->
+            // A Snippet is Additional text that's displayed below the title.
+            val snippet = String.format(
+                Locale.getDefault(),
+                "Lat: %1$.5f, Long: %2$.5f",
+                latLng.latitude,
+                latLng.longitude
+            )
+            map.clear()
+            selectedPosition = latLng
+            map.addMarker(
+                MarkerOptions()
+                    .position(latLng)
+                    .title(getString(R.string.dropped_pin))
+                    .snippet(snippet)
+
+            )
+        }
+    }
 }
