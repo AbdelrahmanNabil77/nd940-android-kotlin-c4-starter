@@ -33,6 +33,7 @@ class AuthenticationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_authentication)
 //         TODO: Implement the create account and sign in using FirebaseUI, use sign in using email and sign in using Google
+        navigateIfUserLoggedIn()
         binding.authButton.setOnClickListener { launchSignInFlow() }
 //          TODO: If the user was authenticated, send him to RemindersActivity
 
@@ -41,17 +42,21 @@ class AuthenticationActivity : AppCompatActivity() {
 
     }
 
+    private fun navigateIfUserLoggedIn() {
+        if (FirebaseAuth.getInstance().currentUser != null) {
+            val email = FirebaseAuth.getInstance().currentUser?.email
+            navigateWithEmail(email ?: "")
+        }
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == SIGN_IN_RESULT_CODE) {
             val response = IdpResponse.fromResultIntent(data)
             if (resultCode == Activity.RESULT_OK) {
                 // Successfully signed in user.
-                val email=FirebaseAuth.getInstance().currentUser?.email
-                val intent=Intent(this@AuthenticationActivity,RemindersActivity::class.java)
-                intent.putExtra(AppConstants.USER_EMAIL,email)
-                startActivity(intent)
-                finish()
+                val email = FirebaseAuth.getInstance().currentUser?.email
+                navigateWithEmail(email ?: "")
             } else {
                 // Sign in failed. If response is null the user canceled the sign-in flow using
                 // the back button. Otherwise check response.getError().getErrorCode() and handle
@@ -75,5 +80,12 @@ class AuthenticationActivity : AppCompatActivity() {
                 providers
             ).build(), SIGN_IN_RESULT_CODE
         )
+    }
+
+    private fun navigateWithEmail(email: String) {
+        val intent = Intent(this@AuthenticationActivity, RemindersActivity::class.java)
+        intent.putExtra(AppConstants.USER_EMAIL, email)
+        startActivity(intent)
+        finish()
     }
 }

@@ -40,6 +40,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
 
     private var selectedPosition = LatLng(0.0, 0.0)
+    private var selectedLocationTag = ""
 
     //Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
@@ -73,6 +74,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         //         and navigate back to the previous fragment to save the reminder and add the geofence
         _viewModel.latitude.postValue(selectedPosition.latitude)
         _viewModel.longitude.postValue(selectedPosition.longitude)
+        _viewModel.reminderSelectedLocationStr.postValue(selectedLocationTag)
         requireActivity().onBackPressed()
     }
 
@@ -226,6 +228,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         map.setOnPoiClickListener { poi ->
             map.clear()
             selectedPosition = poi.latLng
+            selectedLocationTag = poi.name
             val poiMarker = map.addMarker(
                 MarkerOptions()
                     .position(poi.latLng)
@@ -246,6 +249,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             )
             map.clear()
             selectedPosition = latLng
+            selectedLocationTag = getString(R.string.dropped_pin)
             map.addMarker(
                 MarkerOptions()
                     .position(latLng)

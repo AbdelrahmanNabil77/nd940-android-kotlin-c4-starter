@@ -93,9 +93,4 @@ class ReminderListFragment : BaseFragment() {
         requireActivity().startActivity(intent)
         requireActivity().finish()
     }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        logOut()
-    }
 }
