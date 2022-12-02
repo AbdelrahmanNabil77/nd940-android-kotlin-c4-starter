@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.*
 import androidx.databinding.DataBindingUtil
+import androidx.navigation.fragment.findNavController
 import com.firebase.ui.auth.AuthUI
 import com.udacity.project4.R
 import com.udacity.project4.authentication.AuthenticationActivity
@@ -13,6 +14,7 @@ import com.udacity.project4.databinding.FragmentRemindersBinding
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import com.udacity.project4.utils.setTitle
 import com.udacity.project4.utils.setup
+import org.koin.android.ext.android.bind
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class ReminderListFragment : BaseFragment() {
@@ -45,6 +47,9 @@ class ReminderListFragment : BaseFragment() {
         setupRecyclerView()
         binding.addReminderFAB.setOnClickListener {
             navigateToAddReminder()
+        }
+        binding.clearRemindersFAB.setOnClickListener {
+            _viewModel.clearReminders()
         }
     }
 
@@ -88,9 +93,12 @@ class ReminderListFragment : BaseFragment() {
     }
 
     private fun logOut() {
-        AuthUI.getInstance().signOut(requireContext())
-        val intent = Intent(requireActivity(), AuthenticationActivity::class.java)
-        requireActivity().startActivity(intent)
-        requireActivity().finish()
+        AuthUI.getInstance().signOut(requireContext()).run {
+            addOnSuccessListener {
+                val intent = Intent(requireActivity(), AuthenticationActivity::class.java)
+                requireActivity().startActivity(intent)
+                requireActivity().finish()
+            }
+        }
     }
 }

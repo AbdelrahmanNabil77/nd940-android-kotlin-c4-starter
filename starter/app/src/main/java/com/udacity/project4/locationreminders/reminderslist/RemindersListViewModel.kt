@@ -57,4 +57,13 @@ class RemindersListViewModel(
     private fun invalidateShowNoData() {
         showNoData.value = remindersList.value == null || remindersList.value!!.isEmpty()
     }
+
+    fun clearReminders(){
+        showLoading.value = true
+        viewModelScope.launch {
+            dataSource.deleteAllReminders()
+            showLoading.value = false
+            loadReminders()
+        }
+    }
 }
