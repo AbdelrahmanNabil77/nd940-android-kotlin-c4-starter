@@ -85,7 +85,7 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
     }
 
     // A PendingIntent for the Broadcast Receiver that handles geofence transitions.
-    fun geofencePendingIntent(title:String,description: String): PendingIntent {
+    fun geofencePendingIntent(title:String="",description: String=""): PendingIntent {
         val intent = Intent(app, GeofenceBroadcastReceiver::class.java)
         intent.action = AppConstants.ACTION_GEOFENCE_EVENT
         intent.putExtra(AppConstants.REMINDER_TITLE_TO_BROADCAST, title)

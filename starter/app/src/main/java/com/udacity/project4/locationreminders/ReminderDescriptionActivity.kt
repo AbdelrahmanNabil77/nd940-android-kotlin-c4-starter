@@ -42,28 +42,7 @@ class ReminderDescriptionActivity : AppCompatActivity() {
         val reminderItem: ReminderDataItem =
             intent.getSerializableExtra(EXTRA_ReminderDataItem) as ReminderDataItem
 
-        removeGeofence(reminderItem.id)
     }
 
-    private fun removeGeofence(geofenceId: String) {
-        geofencingClient.removeGeofences(listOf(geofenceId))?.run {
-            addOnSuccessListener {
-                Toast.makeText(
-                    applicationContext,
-                    getString(R.string.geofences_removed),
-                    Toast.LENGTH_SHORT
-                )
-                    .show()
-            }
-            addOnFailureListener {
-                Toast.makeText(
-                    applicationContext,
-                    getString(R.string.geofences_not_removed),
-                    Toast.LENGTH_SHORT
-                )
-                    .show()
-            }
-        }
 
-    }
 }

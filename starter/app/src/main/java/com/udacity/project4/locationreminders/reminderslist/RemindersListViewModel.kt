@@ -1,16 +1,22 @@
 package com.udacity.project4.locationreminders.reminderslist
 
 import android.app.Application
+import android.app.PendingIntent
+import android.content.Intent
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.location.GeofencingClient
+import com.google.android.gms.location.LocationServices
 import com.udacity.project4.base.BaseViewModel
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
+import com.udacity.project4.locationreminders.geofence.GeofenceBroadcastReceiver
+import com.udacity.project4.utils.AppConstants
 import kotlinx.coroutines.launch
 
 class RemindersListViewModel(
-    app: Application,
+    val app: Application,
     private val dataSource: ReminderDataSource
 ) : BaseViewModel(app) {
     // list that holds the reminder data to be displayed on the UI
@@ -60,10 +66,32 @@ class RemindersListViewModel(
 
     fun clearReminders(){
         showLoading.value = true
+        clearGeoFence()
         viewModelScope.launch {
             dataSource.deleteAllReminders()
             showLoading.value = false
             loadReminders()
         }
+    }
+
+    fun clearGeoFence(){
+        var geofencingClient = LocationServices.getGeofencingClient(app)
+        geofencingClient.removeGeofences(geofencePendingIntent())
+    }
+
+    // A PendingIntent for the Broadcast Receiver that handles geofence transitions.
+    fun geofencePendingIntent(title:String="",description: String=""): PendingIntent {
+        val intent = Intent(app, GeofenceBroadcastReceiver::class.java)
+        intent.action = AppConstants.ACTION_GEOFENCE_EVENT
+        intent.putExtra(AppConstants.REMINDER_TITLE_TO_BROADCAST, title)
+        intent.putExtra(AppConstants.REMINDER_DESC_TO_BROADCAST, description)
+        // Use FLAG_UPDATE_CURRENT so that you get the same pending intent back when calling
+        // addGeofences() and removeGeofences().
+        return PendingIntent.getBroadcast(
+            app,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT
+        )
     }
 }
