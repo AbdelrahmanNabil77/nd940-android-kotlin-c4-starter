@@ -12,6 +12,7 @@ import com.google.android.gms.location.LocationServices
 import com.udacity.project4.R
 import com.udacity.project4.databinding.ActivityReminderDescriptionBinding
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
+import org.koin.android.ext.android.bind
 
 /**
  * Activity that displays the reminder details after the user clicks on the notification
@@ -41,6 +42,8 @@ class ReminderDescriptionActivity : AppCompatActivity() {
         geofencingClient = LocationServices.getGeofencingClient(this)
         val reminderItem: ReminderDataItem =
             intent.getSerializableExtra(EXTRA_ReminderDataItem) as ReminderDataItem
+        binding.reminderDataItem=reminderItem
+        binding.invalidateAll()
 
     }
 

@@ -44,4 +44,7 @@
     <string name="geofences_added">Geofence added.</string>
     <string name="geofences_removed">Geofences removed.</string>
     <string name="geofences_not_removed">Error in removing geofence.</string>
+    <string name="title">Title:</string>
+    <string name="description">Description:</string>
+    <string name="geofence">Geofence:</string>
 </resources>
