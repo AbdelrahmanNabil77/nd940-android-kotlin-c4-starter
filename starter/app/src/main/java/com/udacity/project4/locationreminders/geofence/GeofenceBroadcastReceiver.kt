@@ -7,11 +7,19 @@ import android.util.Log
 import android.widget.Toast
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
+import com.udacity.project4.locationreminders.data.ReminderDataSource
+import com.udacity.project4.locationreminders.data.dto.ReminderDTO
+import com.udacity.project4.locationreminders.data.dto.Result
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import com.udacity.project4.utils.AppConstants.ACTION_GEOFENCE_EVENT
 import com.udacity.project4.utils.AppConstants.REMINDER_DESC_TO_BROADCAST
 import com.udacity.project4.utils.AppConstants.REMINDER_TITLE_TO_BROADCAST
 import com.udacity.project4.utils.sendNotification
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.GlobalScope.coroutineContext
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 
 /**
  * Triggered by the Geofence.  Since we can have many Geofences at once, we pull the request
@@ -24,33 +32,19 @@ import com.udacity.project4.utils.sendNotification
  */
 
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
-    val TAG = "GeoFenceReceiver"
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == ACTION_GEOFENCE_EVENT) {
             val geofencingEvent = GeofencingEvent.fromIntent(intent)
 
             if (geofencingEvent.hasError()) {
-                Toast.makeText(context,"Geofence error: ${geofencingEvent.errorCode}",
-                Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    context, "Geofence error: ${geofencingEvent.errorCode}",
+                    Toast.LENGTH_LONG
+                ).show()
                 return
             }
+            GeofenceTransitionsJobIntentService.enqueueWork(context, intent)
 
-            if (geofencingEvent.geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
-                Log.d(TAG,"ON RECEIVE lat: ${geofencingEvent.triggeringLocation.latitude} " +
-                        "lon: ${geofencingEvent.triggeringLocation.longitude}")
-                val fenceId = when {
-                    geofencingEvent.triggeringGeofences.isNotEmpty() ->
-                        geofencingEvent.triggeringGeofences[0].requestId
-                    else -> {
-                        Log.e(TAG, "No Geofence Trigger Found! Abort mission!")
-                        return
-                    }
-                }
-
-                sendNotification(context,
-                    ReminderDataItem("title","Desc","${fenceId}",
-                    geofencingEvent.triggeringLocation.latitude,geofencingEvent.triggeringLocation.longitude))
-            }
         }
 
     }

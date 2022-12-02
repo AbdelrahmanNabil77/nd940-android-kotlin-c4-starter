@@ -64,28 +64,28 @@ class SaveReminderFragment : BaseFragment() {
             val location = _viewModel.reminderSelectedLocationStr.value
             val latitude = _viewModel.latitude.value
             val longitude = _viewModel.longitude.value
-
-            addGeofence(title ?: "", description ?: "")
+            val reminderDataItem =  ReminderDataItem(
+                title,
+                description,
+                location,
+                latitude,
+                longitude
+            )
+            addGeofence(reminderDataItem)
 
             _viewModel.saveReminder(
-                ReminderDataItem(
-                    title,
-                    description,
-                    location,
-                    latitude,
-                    longitude
-                )
+               reminderDataItem
             )
 
         }
     }
 
     @SuppressLint("MissingPermission")
-    private fun addGeofence(title: String, description: String) {
+    private fun addGeofence(reminderDataItem: ReminderDataItem) {
         // Build the Geofence Object
         val geofence = Geofence.Builder()
             // Set the request ID, string to identify the geofence.
-            .setRequestId(_viewModel.reminderSelectedLocationStr.value)
+            .setRequestId(reminderDataItem.id)
             // Set the circular region of this geofence.
             .setCircularRegion(
                 _viewModel.latitude.value ?: 0.0,
@@ -112,7 +112,8 @@ class SaveReminderFragment : BaseFragment() {
         // Add the new geofence request with the n•ew geofence
         geofencingClient.addGeofences(
             geofencingRequest,
-            _viewModel.geofencePendingIntent(title, description)
+            _viewModel.geofencePendingIntent(reminderDataItem.title?:"",
+                reminderDataItem.description?:"")
         )?.run {
             addOnSuccessListener {
                 // Geofences added.
