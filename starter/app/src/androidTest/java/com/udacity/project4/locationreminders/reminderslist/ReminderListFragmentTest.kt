@@ -9,6 +9,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions
+import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
@@ -16,6 +18,9 @@ import com.udacity.project4.FakeDataSource
 import com.udacity.project4.R
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
+import org.hamcrest.CoreMatchers
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -49,7 +54,7 @@ class ReminderListFragmentTest {
     private lateinit var remindersListViewModel: RemindersListViewModel
 
     @Before
-    fun setup(){
+    fun setup() {
         remindersList = listOf(reminderItem1, reminderItem2, reminderItem3)
         remindersLocalRepository = FakeDataSource(remindersList.toMutableList())
         remindersListViewModel =
@@ -67,14 +72,41 @@ class ReminderListFragmentTest {
             modules(listOf(myModule))
         }
     }
-//    TODO: test the navigation of the fragments.
+
+    //    TODO: test the navigation of the fragments.
 //    TODO: test the displayed data on the UI.
 //    TODO: add testing for the error messages.
     @Test
-    fun reminderList_displayedUI(){
-        val reminderDataItem = ReminderDataItem("title","disc","loc",
-        0.0,0.0)
-    launchFragmentInContainer <ReminderListFragment>(Bundle(),R.style.AppTheme)
-    Thread.sleep(2000)
+    fun reminderListNotEmpty_displayedUI() {
+        launchFragmentInContainer<ReminderListFragment>(Bundle(), R.style.AppTheme)
+        onView(withId(R.id.noDataTextView)).check(
+            ViewAssertions.matches(
+                CoreMatchers.not(
+                    ViewMatchers.isDisplayed()
+                )
+            )
+        )
+        onView(ViewMatchers.withText(remindersList[0].title)).check(
+            ViewAssertions.matches(
+                ViewMatchers.isDisplayed()
+            )
+        )
+        onView(ViewMatchers.withText(remindersList[0].description)).check(
+            ViewAssertions.matches(
+                ViewMatchers.isDisplayed()
+            )
+        )
+        onView(ViewMatchers.withText(remindersList[0].location)).check(
+            ViewAssertions.matches(
+                ViewMatchers.isDisplayed()
+            )
+        )
+    }
+
+    @Test
+    fun reminderListEmpty_displayedUI() = runBlockingTest {
+        remindersLocalRepository.deleteAllReminders()
+        launchFragmentInContainer<ReminderListFragment>(Bundle(), R.style.AppTheme)
+        onView(withId(R.id.noDataTextView)).check(ViewAssertions.matches((ViewMatchers.isDisplayed())))
     }
 }
