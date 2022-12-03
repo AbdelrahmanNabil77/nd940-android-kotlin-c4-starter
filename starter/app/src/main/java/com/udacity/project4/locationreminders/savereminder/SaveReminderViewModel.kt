@@ -1,10 +1,17 @@
 package com.udacity.project4.locationreminders.savereminder
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.app.PendingIntent
 import android.content.Intent
+import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.GeofencingClient
+import com.google.android.gms.location.GeofencingRequest
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.PointOfInterest
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseViewModel
@@ -77,6 +84,11 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
             return false
         }
 
+        if (reminderData.description.isNullOrEmpty()) {
+            showSnackBarInt.value = R.string.err_enter_desc
+            return false
+        }
+
         if (reminderData.location.isNullOrEmpty()) {
             showSnackBarInt.value = R.string.err_select_location
             return false
@@ -90,8 +102,6 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
         intent.action = AppConstants.ACTION_GEOFENCE_EVENT
         intent.putExtra(AppConstants.REMINDER_TITLE_TO_BROADCAST, title)
         intent.putExtra(AppConstants.REMINDER_DESC_TO_BROADCAST, description)
-        // Use FLAG_UPDATE_CURRENT so that you get the same pending intent back when calling
-        // addGeofences() and removeGeofences().
         return PendingIntent.getBroadcast(
             app,
             0,
