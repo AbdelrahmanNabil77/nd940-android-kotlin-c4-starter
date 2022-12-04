@@ -55,10 +55,12 @@ class RemindersListViewModelTest {
     }
 
     @Test
-    fun showLoaderInLoadReminders_true() = runBlockingTest {
+    fun showAndHideLoaderInLoadReminders_true() = runBlockingTest {
         mainCoroutineRule.pauseDispatcher()
         remindersListViewModel.loadReminders()
         assertEquals(true, remindersListViewModel.showLoading.getOrAwaitValue())
+        mainCoroutineRule.resumeDispatcher()
+        assertEquals(false, remindersListViewModel.showLoading.getOrAwaitValue())
     }
 
     @Test
