@@ -73,9 +73,6 @@ class ReminderListFragmentTest {
         }
     }
 
-    //    TODO: test the navigation of the fragments.
-//    TODO: test the displayed data on the UI.
-//    TODO: add testing for the error messages.
     @Test
     fun reminderListNotEmpty_displayedUI() {
         launchFragmentInContainer<ReminderListFragment>(Bundle(), R.style.AppTheme)
@@ -104,9 +101,31 @@ class ReminderListFragmentTest {
     }
 
     @Test
+    fun navigate_add_reminderTest() = runBlockingTest {
+        val fragmentScenario =
+            launchFragmentInContainer<ReminderListFragment>(Bundle(), R.style.AppTheme)
+        val navController = mock(NavController::class.java)
+        fragmentScenario.onFragment {
+            Navigation.setViewNavController(it.view!!, navController)
+        }
+
+        onView(withId(R.id.addReminderFAB)).perform(click())
+
+        verify(navController).navigate(ReminderListFragmentDirections.toSaveReminder())
+    }
+
+    @Test
     fun reminderListEmpty_displayedUI() = runBlockingTest {
         remindersLocalRepository.deleteAllReminders()
         launchFragmentInContainer<ReminderListFragment>(Bundle(), R.style.AppTheme)
         onView(withId(R.id.noDataTextView)).check(ViewAssertions.matches((ViewMatchers.isDisplayed())))
+    }
+
+    @Test
+    fun reminderListFragment_displayedUIButtons() = runBlockingTest {
+        remindersLocalRepository.deleteAllReminders()
+        launchFragmentInContainer<ReminderListFragment>(Bundle(), R.style.AppTheme)
+        onView(withId(R.id.addReminderFAB)).check(ViewAssertions.matches((ViewMatchers.isDisplayed())))
+        onView(withId(R.id.clearRemindersFAB)).check(ViewAssertions.matches((ViewMatchers.isDisplayed())))
     }
 }
