@@ -108,7 +108,7 @@ class RemindersActivityTest :
     }
 
     @Test
-    fun checkSnackBar_test() {
+    fun checkErrorSnackBar() {
         val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
         Espresso.onView(withId(R.id.noDataTextView))
             .check(ViewAssertions.matches(isDisplayed()))
