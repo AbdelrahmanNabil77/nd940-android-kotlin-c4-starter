@@ -1,9 +1,14 @@
 package com.udacity.project4.locationreminders
 
+import android.content.IntentSender
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.MutableLiveData
 import androidx.navigation.fragment.NavHostFragment
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.*
+import com.google.android.gms.tasks.Task
 import com.udacity.project4.R
 import com.udacity.project4.utils.AppConstants
 import kotlinx.android.synthetic.main.activity_reminders.*
@@ -14,6 +19,7 @@ import kotlinx.android.synthetic.main.activity_reminders.*
 class RemindersActivity : AppCompatActivity() {
     val TAG = "RemindersActivity"
     lateinit var email: String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_reminders)
@@ -30,5 +36,4 @@ class RemindersActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    fun getUserEmail() = email
 }
