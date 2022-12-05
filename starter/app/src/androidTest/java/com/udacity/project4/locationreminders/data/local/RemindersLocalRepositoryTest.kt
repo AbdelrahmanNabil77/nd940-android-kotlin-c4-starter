@@ -105,4 +105,15 @@ class RemindersLocalRepositoryTest {
         assertEquals(reminders.data[0], reminder.data)
     }
 
+    @Test
+    fun getTaskById_notFound() = runBlockingTest {
+        remindersDatabase.reminderDao().saveReminder(reminderItem1)
+        remindersDatabase.reminderDao().saveReminder(reminderItem2)
+        remindersDatabase.reminderDao().saveReminder(reminderItem3)
+        val reminders =
+            remindersLocalRepository.getReminders() as com.udacity.project4.locationreminders.data.dto.Result.Success
+        val reminder=remindersLocalRepository.getReminder("no_id") as com.udacity.project4.locationreminders.data.dto.Result.Error
+        assertEquals("Reminder not found!", reminder.message)
+    }
+
 }
