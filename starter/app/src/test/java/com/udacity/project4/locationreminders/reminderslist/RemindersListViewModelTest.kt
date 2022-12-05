@@ -71,6 +71,22 @@ class RemindersListViewModelTest {
         assertEquals(0, reminders.data.size)
     }
 
+    @Test
+    fun getRemindersWithError_callErrorToDisplay() = runBlockingTest {
+        remindersLocalRepository.setShouldReturnError(true)
+        val reminders =
+            remindersLocalRepository.getReminders() as com.udacity.project4.locationreminders.data.dto.Result.Error
+        assertEquals("Testing error get reminders", reminders.message)
+    }
+
+    @Test
+    fun getReminderWithError_callErrorToDisplay() = runBlockingTest {
+        remindersLocalRepository.setShouldReturnError(true)
+        val reminders =
+            remindersLocalRepository.getReminder("no_id") as com.udacity.project4.locationreminders.data.dto.Result.Error
+        assertEquals("Testing error get reminder", reminders.message)
+    }
+
     @After
     fun stopDown() {
         stopKoin()
