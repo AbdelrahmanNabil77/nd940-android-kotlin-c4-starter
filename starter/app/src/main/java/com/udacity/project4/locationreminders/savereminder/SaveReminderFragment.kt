@@ -93,6 +93,7 @@ class SaveReminderFragment : BaseFragment() {
             // Set the transition types of interest. Alerts are only generated for these
             // transition. We track entry and exit transitions in this sample.
             .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+            .setExpirationDuration(Geofence.NEVER_EXPIRE)
             .build()
 
         // Build the geofence request
