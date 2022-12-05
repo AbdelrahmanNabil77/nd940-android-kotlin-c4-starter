@@ -3,28 +3,31 @@ package com.udacity.project4.utils
 import android.app.AlertDialog
 import android.content.Context
 
-fun showAlertDialogFor(
+fun showAlertDialog(
     title: String,
     message: String,
     dialogButtonsListener: DialogButtons,
-    context: Context
-) {
+    context: Context,
+    positiveBtnTitle:String
+):AlertDialog.Builder {
     val builder = AlertDialog.Builder(context)
     builder.setTitle("$title")
     builder.setMessage("$message")
 
-    builder.setPositiveButton(android.R.string.yes) { dialog, which ->
+    builder.setPositiveButton(positiveBtnTitle) { dialog, which ->
         dialogButtonsListener.setOnPositiveListener()
     }
 
-    builder.setNegativeButton(android.R.string.no) { dialog, which ->
-        dialogButtonsListener.setOnNegativeListener()
+    builder.setNegativeButton(android.R.string.cancel) { dialog, which ->
+//        dialogButtonsListener.setOnNegativeListener()
+        dialog.dismiss()
     }
 
 //    builder.setNeutralButton(android.R.string.cancel) { dialog, which ->
 //        dialogButtonsListener.setOnNeutralListener()
 //    }
-    builder.show()
+    builder.setCancelable(false)
+    return builder
 }
 
 interface DialogButtons {
@@ -32,9 +35,9 @@ interface DialogButtons {
 
     }
 
-    fun setOnNegativeListener() {
-
-    }
+//    fun setOnNegativeListener() {
+//
+//    }
 
 //    fun setOnNeutralListener() {
 //

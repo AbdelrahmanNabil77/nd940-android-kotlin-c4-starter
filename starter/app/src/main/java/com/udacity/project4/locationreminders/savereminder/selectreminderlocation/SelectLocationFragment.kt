@@ -3,9 +3,9 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
-import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.location.Location
@@ -15,38 +15,32 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.*
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.observe
-import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
-import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.BuildConfig
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
-import com.udacity.project4.locationreminders.RemindersActivity
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
+import com.udacity.project4.utils.AppConstants.INTENT_TO_SETTINGS
+import com.udacity.project4.utils.AppConstants.REQUEST_ENABLE_GPS
+import com.udacity.project4.utils.AppConstants.REQUEST_FINE_LOCATION_PERMISSION
+import com.udacity.project4.utils.DialogButtons
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
+import com.udacity.project4.utils.showAlertDialog
 import org.koin.android.ext.android.inject
 import java.util.*
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     val TAG = "SelectLocationFragment"
     private lateinit var map: GoogleMap
-    private val runningQOrLater =
-        android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q
-
-    private val REQUEST_FINE_LOCATION_PERMISSION = 2
-    private val REQUEST_BACKGROUND_LOCATION_PERMISSION = 3
-    private val REQUEST_ENABLE_GPS=4
 
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
 
@@ -74,7 +68,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
-        binding.confirmPoiButton.setOnClickListener { onLocationSelected() }
+        binding.confirmPoiButton.setOnClickListener {
+            onLocationSelected()
+            requireActivity().onBackPressed()
+        }
 
         return binding.root
     }
@@ -86,7 +83,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         _viewModel.latitude.postValue(selectedPosition.latitude)
         _viewModel.longitude.postValue(selectedPosition.longitude)
         _viewModel.reminderSelectedLocationStr.postValue(selectedLocationTag)
-        requireActivity().onBackPressed()
     }
 
 
@@ -169,16 +165,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         )
     }
 
-    private fun requestBackgroundLocationPermission() {
-        requestPermissions(
-            arrayOf<String>(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
-            REQUEST_BACKGROUND_LOCATION_PERMISSION
-        )
-    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if(requestCode == REQUEST_ENABLE_GPS){
+        if (requestCode == REQUEST_ENABLE_GPS) {
             if (isLocationEnabled()) {
                 enableMyLocation()
                 getCurrentLocation()
@@ -191,28 +181,15 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         permissions: Array<String>,
         grantResults: IntArray
     ) {
+//        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         // Check if location permissions are granted and if so enable the
         // location data layer.
         if (requestCode == REQUEST_FINE_LOCATION_PERMISSION) {
             if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                if (runningQOrLater) {
-                    requestBackgroundLocationPermission()
-                } else {
-                    enableMyLocation()
-                    getCurrentLocation()
-                }
-            }
-        }
-        if (requestCode == REQUEST_BACKGROUND_LOCATION_PERMISSION) {
-            if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                 enableMyLocation()
                 getCurrentLocation()
-            } else {
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.background_permission_denied_explanation),
-                    Toast.LENGTH_LONG
-                ).show()
+            } else if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_DENIED)) {
+                showSnackBarForLocationPermissionDenied()
             }
         }
     }
@@ -238,6 +215,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 val location: Location? = task.result
                 if (location != null) {
                     selectedPosition = LatLng(location.latitude, location.longitude)
+                    selectedLocationTag = getString(R.string.dropped_pin)
+                    onLocationSelected()
                     val zoom = 15f
                     map.moveCamera(CameraUpdateFactory.newLatLngZoom(selectedPosition, zoom))
                     map.addMarker(
@@ -293,13 +272,33 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             R.string.location_required_error, Snackbar.LENGTH_INDEFINITE
         )
             .setAction(R.string.enable) {
-               navigateToEnableGps()
+                navigateToEnableGps()
             }.show()
+
     }
 
-    fun navigateToEnableGps(){
+    fun navigateToEnableGps() {
         val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-        startActivityForResult(intent,REQUEST_ENABLE_GPS)
+        startActivityForResult(intent, REQUEST_ENABLE_GPS)
+    }
+
+    fun showSnackBarForLocationPermissionDenied() {
+        val snackbar = Snackbar.make(
+            binding.root,
+            R.string.permission_denied_explanation, Snackbar.LENGTH_INDEFINITE
+        )
+            .setAction(R.string.settings) {
+                navigateToSettings()
+            }
+        snackbar.show()
+    }
+
+    fun navigateToSettings() {
+        startActivityForResult(Intent().apply {
+            action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+            data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }, INTENT_TO_SETTINGS)
     }
 
 
