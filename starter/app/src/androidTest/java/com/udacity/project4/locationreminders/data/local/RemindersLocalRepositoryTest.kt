@@ -1,7 +1,11 @@
 package com.udacity.project4.locationreminders.data.local
 
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.room.Room
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import com.udacity.project4.MainCoroutineRule
 import com.udacity.project4.locationreminders.data.FakeDao
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import kotlinx.coroutines.Dispatchers
@@ -9,6 +13,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -31,25 +36,37 @@ class RemindersLocalRepositoryTest {
         "location3", 3.3, 3.3, "id3"
     )
 
+    @get:Rule
+    var instantExecutorRule = InstantTaskExecutorRule()
+
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
+
 
     private lateinit var remindersList: List<ReminderDTO>
-    private lateinit var remindersDao: FakeDao
+    private lateinit var remindersDatabase: RemindersDatabase
     private lateinit var remindersLocalRepository: RemindersLocalRepository
 
     @Before
     fun createRepository() {
         remindersList = listOf(reminderItem1, reminderItem2, reminderItem3)
 
-        remindersDao = FakeDao(remindersList.toMutableList())
+        remindersDatabase =  Room.inMemoryDatabaseBuilder(
+            ApplicationProvider.getApplicationContext(),
+            RemindersDatabase::class.java
+        ).allowMainThreadQueries().build()
 
         remindersLocalRepository = RemindersLocalRepository(
-            remindersDao,
+            remindersDatabase.reminderDao(),
             Dispatchers.Unconfined
         )
     }
 
     @Test
     fun getTask_reqestAllReminders() = runBlockingTest {
+        remindersDatabase.reminderDao().saveReminder(reminderItem1)
+        remindersDatabase.reminderDao().saveReminder(reminderItem2)
+        remindersDatabase.reminderDao().saveReminder(reminderItem3)
         val reminders =
             remindersLocalRepository.getReminders() as com.udacity.project4.locationreminders.data.dto.Result.Success
         assertEquals(remindersList, reminders.data)
@@ -65,6 +82,9 @@ class RemindersLocalRepositoryTest {
 
     @Test
     fun saveTask_saveNewReminders() = runBlockingTest {
+        remindersDatabase.reminderDao().saveReminder(reminderItem1)
+        remindersDatabase.reminderDao().saveReminder(reminderItem2)
+        remindersDatabase.reminderDao().saveReminder(reminderItem3)
         remindersLocalRepository.saveReminder(
             ReminderDTO("title4","desc4",
             "location4",4.4,4.4)
@@ -76,6 +96,9 @@ class RemindersLocalRepositoryTest {
 
     @Test
     fun getTaskById_getOneReminder() = runBlockingTest {
+        remindersDatabase.reminderDao().saveReminder(reminderItem1)
+        remindersDatabase.reminderDao().saveReminder(reminderItem2)
+        remindersDatabase.reminderDao().saveReminder(reminderItem3)
         val reminders =
             remindersLocalRepository.getReminders() as com.udacity.project4.locationreminders.data.dto.Result.Success
         val reminder=remindersLocalRepository.getReminder(reminders.data.get(0).id) as com.udacity.project4.locationreminders.data.dto.Result.Success
