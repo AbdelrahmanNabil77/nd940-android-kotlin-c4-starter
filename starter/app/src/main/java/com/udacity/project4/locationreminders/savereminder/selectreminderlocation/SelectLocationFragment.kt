@@ -4,22 +4,30 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
+import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.location.Location
 import android.location.LocationManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
+import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.gms.tasks.Task
+import com.google.android.material.snackbar.Snackbar
+import com.udacity.project4.BuildConfig
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
@@ -107,13 +115,13 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
 
         map = googleMap
-
         setMapStyle(map)
-        enableMyLocation()
-        getCurrentLocation()
         setPoiClick(map)
         setMapLongClick(map)
-
+        if (isLocationEnabled()){
+            enableMyLocation()
+            getCurrentLocation()
+        }
     }
 
     private fun setMapStyle(map: GoogleMap) {
@@ -199,14 +207,20 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private fun isLocationEnabled(): Boolean {
         val locationManager: LocationManager =
             requireActivity().getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
-            LocationManager.NETWORK_PROVIDER
-        )
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
+                LocationManager.NETWORK_PROVIDER
+            )
+        ) {
+            return true
+        } else {
+            showSnackBarForDisabledLocation()
+            return false
+        }
     }
 
     @SuppressLint("MissingPermission")
     private fun getCurrentLocation() {
-        if (isFineLocationPermissionGranted() && isLocationEnabled()) {
+        if (isFineLocationPermissionGranted()) {
             mFusedLocationClient.lastLocation.addOnCompleteListener(requireActivity()) { task ->
                 val location: Location? = task.result
                 if (location != null) {
@@ -259,4 +273,63 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             )
         }
     }
+
+    fun showSnackBarForDisabledLocation() {
+        Snackbar.make(
+            binding.root,
+            R.string.location_required_error, Snackbar.LENGTH_INDEFINITE
+        )
+            .setAction(R.string.enable) {
+                requestDeviceLocationSettings()
+            }.show()
+    }
+
+    fun requestDeviceLocationSettings() {
+        val locationRequest = LocationRequest.create().apply {
+            interval = 10000
+            fastestInterval = 5000
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
+
+        val builder = LocationSettingsRequest.Builder()
+            .addLocationRequest(locationRequest)
+
+        val client: SettingsClient = LocationServices.getSettingsClient(requireActivity())
+        val task: Task<LocationSettingsResponse> = client.checkLocationSettings(builder.build())
+
+        task.addOnSuccessListener { locationSettingsResponse ->
+            // All location settings are satisfied. The client can initialize
+            // location requests here.
+            // ...
+            val state = locationSettingsResponse.locationSettingsStates
+
+            val label =
+                "GPS >> (Present: ${state.isGpsPresent}  | Usable: ${state.isGpsUsable} ) \n\n" +
+                        "Network >> ( Present: ${state.isNetworkLocationPresent} | Usable: ${state.isNetworkLocationUsable} ) \n\n" +
+                        "Location >> ( Present: ${state.isLocationPresent} | Usable: ${state.isLocationUsable} )"
+
+
+
+        }
+
+        task.addOnFailureListener { exception ->
+            if (exception is ResolvableApiException) {
+                // Location settings are not satisfied, but this can be fixed
+                // by showing the user a dialog.
+                try {
+                    // Show the dialog by calling startResolutionForResult(),
+                    // and check the result in onActivityResult().
+                    exception.startResolutionForResult(
+                        requireActivity(),
+                        100
+                    )
+                } catch (sendEx: IntentSender.SendIntentException) {
+                    // Ignore the error.
+
+                }
+            }
+        }
+
+    }
+
 }

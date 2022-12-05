@@ -20,6 +20,7 @@
     <string name="dropped_pin">Dropped Pin</string>
     <string name="poi">poi</string>
     <string name="location_required_error">Location services must be enabled to use the app</string>
+    <string name="enable">Enable</string>
     <string name="permission_denied_explanation">You need to grant location permission in order to select the location.</string>
     <string name="background_permission_denied_explanation">"Without this permission the geofence might not work properly."</string>
     <string name="settings">Settings</string>
