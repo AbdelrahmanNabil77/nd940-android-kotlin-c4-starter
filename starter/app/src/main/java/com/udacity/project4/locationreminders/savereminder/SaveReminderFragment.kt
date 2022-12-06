@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.net.Uri
@@ -16,10 +17,8 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
-import com.google.android.gms.location.Geofence
-import com.google.android.gms.location.GeofencingClient
-import com.google.android.gms.location.GeofencingRequest
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.*
 import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.BuildConfig
 import com.udacity.project4.R
@@ -259,7 +258,7 @@ class SaveReminderFragment : BaseFragment() {
         ) {
             return true
         } else {
-            showSnackBarForDisabledLocation()
+            showEnableLocationSettings()
             return false
         }
     }
@@ -271,13 +270,38 @@ class SaveReminderFragment : BaseFragment() {
 
     }
 
+    fun showEnableLocationSettings() {
+        activity?.let {
+            val locationRequest = LocationRequest.create()
+            locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+
+            val builder = LocationSettingsRequest.Builder()
+                .addLocationRequest(locationRequest)
+
+            val task = LocationServices.getSettingsClient(it)
+                .checkLocationSettings(builder.build())
+
+            task.addOnCompleteListener {
+                if (it.isSuccessful) {
+                    saveReminder()
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        "The geofence requires gps service to work properly",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_ENABLE_GPS) {
-            if(isLocationEnabled()){
+            if (isLocationEnabled()) {
                 saveReminder()
-            }else{
-                showSnackBarForDisabledLocation()
+            } else {
+                showEnableLocationSettings()
             }
         }
     }
@@ -291,7 +315,7 @@ class SaveReminderFragment : BaseFragment() {
         if (requestCode == REQUEST_BACKGROUND_LOCATION_PERMISSION) {
             if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                 saveReminder()
-            } else if(grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_DENIED)){
+            } else if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_DENIED)) {
                 showSnackBarForBackgroundLocationPermissionDenied()
             }
         }
@@ -299,7 +323,7 @@ class SaveReminderFragment : BaseFragment() {
         if (requestCode == AppConstants.REQUEST_FINE_LOCATION_PERMISSION) {
             if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                 saveReminder()
-            } else if(grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_DENIED)){
+            } else if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_DENIED)) {
                 showSnackBarForForegroundLocationPermissionDenied()
             }
         }

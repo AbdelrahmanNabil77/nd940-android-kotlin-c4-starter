@@ -12,5 +12,5 @@ object AppConstants {
     const val REQUEST_FINE_LOCATION_PERMISSION = 2
     const val REQUEST_BACKGROUND_LOCATION_PERMISSION = 3
     const val REQUEST_ENABLE_GPS = 4
-    const val INTENT_TO_SETTINGS=5
+    const val INTENT_TO_SETTINGS = 5
 }
