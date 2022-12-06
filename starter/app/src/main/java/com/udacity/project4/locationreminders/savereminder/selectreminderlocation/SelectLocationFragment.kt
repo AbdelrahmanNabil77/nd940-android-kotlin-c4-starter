@@ -3,7 +3,6 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -32,9 +31,7 @@ import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.AppConstants.INTENT_TO_SETTINGS
 import com.udacity.project4.utils.AppConstants.REQUEST_ENABLE_GPS
 import com.udacity.project4.utils.AppConstants.REQUEST_FINE_LOCATION_PERMISSION
-import com.udacity.project4.utils.DialogButtons
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
-import com.udacity.project4.utils.showAlertDialog
 import org.koin.android.ext.android.inject
 import java.util.*
 
@@ -117,9 +114,11 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         setMapStyle(map)
         setPoiClick(map)
         setMapLongClick(map)
-        if (isLocationEnabled()) {
-            enableMyLocation()
-            getCurrentLocation()
+        if (isFineLocationPermissionGranted()) {
+            if (isLocationEnabled()) {
+                enableMyLocation()
+                getCurrentLocation()
+            }
         }
     }
 
@@ -143,10 +142,16 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
 
     private fun isFineLocationPermissionGranted(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            requireContext(),
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) === PackageManager.PERMISSION_GRANTED
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) === PackageManager.PERMISSION_GRANTED
+        ) {
+            return true
+        } else {
+            requestFineLocationPermission()
+            return false
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -186,8 +191,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         // location data layer.
         if (requestCode == REQUEST_FINE_LOCATION_PERMISSION) {
             if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                enableMyLocation()
-                getCurrentLocation()
+                if (isLocationEnabled()) {
+                    enableMyLocation()
+                    getCurrentLocation()
+                }
             } else if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_DENIED)) {
                 showSnackBarForLocationPermissionDenied()
             }
