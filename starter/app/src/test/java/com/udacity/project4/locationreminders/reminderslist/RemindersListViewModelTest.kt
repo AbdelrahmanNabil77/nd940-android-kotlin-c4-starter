@@ -87,6 +87,14 @@ class RemindersListViewModelTest {
         assertEquals("Testing error get reminder", reminders.message)
     }
 
+    @Test
+    fun getRemindersWithSnackbarError_callErrorToDisplay() = runBlockingTest {
+        remindersLocalRepository.setShouldReturnError(true)
+        remindersListViewModel.loadReminders()
+        mainCoroutineRule.pauseDispatcher()
+        assertEquals("Testing error get reminders", remindersListViewModel.showSnackBar.getOrAwaitValue())
+    }
+
     @After
     fun stopDown() {
         stopKoin()
