@@ -284,12 +284,6 @@ class SaveReminderFragment : BaseFragment() {
             task.addOnCompleteListener {
                 if (it.isSuccessful) {
                     saveReminder()
-                } else {
-                    Toast.makeText(
-                        requireContext(),
-                        "The geofence requires gps service to work properly",
-                        Toast.LENGTH_LONG
-                    ).show()
                 }
             }
         }
