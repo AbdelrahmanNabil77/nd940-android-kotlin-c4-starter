@@ -115,8 +115,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         setPoiClick(map)
         setMapLongClick(map)
         if (isFineLocationPermissionGranted()) {
+            enableMyLocation()
             if (isLocationEnabled()) {
-                enableMyLocation()
                 getCurrentLocation()
             }
         }
@@ -175,7 +175,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_ENABLE_GPS) {
             if (isLocationEnabled()) {
-                enableMyLocation()
                 getCurrentLocation()
             }
         }
@@ -191,8 +190,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         // location data layer.
         if (requestCode == REQUEST_FINE_LOCATION_PERMISSION) {
             if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                enableMyLocation()
                 if (isLocationEnabled()) {
-                    enableMyLocation()
                     getCurrentLocation()
                 }
             } else if (grantResults.size > 0 && (grantResults[0] == PackageManager.PERMISSION_DENIED)) {
