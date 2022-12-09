@@ -258,7 +258,7 @@ class SaveReminderFragment : BaseFragment() {
         ) {
             return true
         } else {
-            showEnableLocationSettings()
+            checkDeviceLocationSettingsAndStartGeofence()
             return false
         }
     }
@@ -270,21 +270,36 @@ class SaveReminderFragment : BaseFragment() {
 
     }
 
-    fun showEnableLocationSettings() {
-        activity?.let {
-            val locationRequest = LocationRequest.create()
-            locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-
-            val builder = LocationSettingsRequest.Builder()
-                .addLocationRequest(locationRequest)
-
-            val task = LocationServices.getSettingsClient(it)
-                .checkLocationSettings(builder.build())
-
-            task.addOnCompleteListener {
-                if (it.isSuccessful) {
-                    saveReminder()
+    private fun checkDeviceLocationSettingsAndStartGeofence(resolve: Boolean = true) {
+        val locationRequest = LocationRequest.create().apply {
+            priority = LocationRequest.PRIORITY_LOW_POWER
+        }
+        val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
+        val settingsClient = LocationServices.getSettingsClient(requireActivity())
+        val locationSettingsResponseTask =
+            settingsClient.checkLocationSettings(builder.build())
+        locationSettingsResponseTask.addOnFailureListener { exception ->
+            if (exception is ResolvableApiException && resolve) {
+                try {
+                    exception.startResolutionForResult(
+                        requireActivity(),
+                        REQUEST_ENABLE_GPS
+                    )
+                } catch (sendEx: IntentSender.SendIntentException) {
+                    Log.d(TAG, "Error getting location settings resolution: " + sendEx.message)
                 }
+            } else {
+                Snackbar.make(
+                    binding.root,
+                    R.string.location_required_error, Snackbar.LENGTH_INDEFINITE
+                ).setAction(android.R.string.ok) {
+                    checkDeviceLocationSettingsAndStartGeofence()
+                }.show()
+            }
+        }
+        locationSettingsResponseTask.addOnCompleteListener {
+            if (it.isSuccessful) {
+                saveReminder()
             }
         }
     }
@@ -295,7 +310,7 @@ class SaveReminderFragment : BaseFragment() {
             if (isLocationEnabled()) {
                 saveReminder()
             } else {
-                showEnableLocationSettings()
+                checkDeviceLocationSettingsAndStartGeofence()
             }
         }
     }
