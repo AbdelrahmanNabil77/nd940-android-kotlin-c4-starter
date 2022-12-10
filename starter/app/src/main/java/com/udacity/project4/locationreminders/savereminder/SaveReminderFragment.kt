@@ -281,9 +281,14 @@ class SaveReminderFragment : BaseFragment() {
         locationSettingsResponseTask.addOnFailureListener { exception ->
             if (exception is ResolvableApiException && resolve) {
                 try {
-                    exception.startResolutionForResult(
-                        requireActivity(),
-                        REQUEST_ENABLE_GPS
+                    startIntentSenderForResult(
+                        exception.resolution.intentSender,
+                        REQUEST_ENABLE_GPS,
+                        null,
+                        0,
+                        0,
+                        0,
+                        null
                     )
                 } catch (sendEx: IntentSender.SendIntentException) {
                     Log.d(TAG, "Error getting location settings resolution: " + sendEx.message)
@@ -307,11 +312,7 @@ class SaveReminderFragment : BaseFragment() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_ENABLE_GPS) {
-            if (isLocationEnabled()) {
-                saveReminder()
-            } else {
-                checkDeviceLocationSettingsAndStartGeofence()
-            }
+           saveReminder()
         }
     }
 
